@@ -1,0 +1,138 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <a data-toggle="modal" data-target="#add_store_category_modal" title="{{ button_add }}" class="btn btn-primary"><i class="fa fa-plus"></i></a>
+        <button type="button" form="form-product" formaction="{{ delete }}" data-toggle="tooltip" title="{{ button_delete }}" class="btn btn-danger" onclick="confirm('{{ text_confirm }}') ? $('#form-product').submit() : false;"><i class="fa fa-trash-o"></i></button>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">{% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="row">
+      <div class="col-md-12 col-sm-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_list }}</h3>
+          </div>
+          <div class="panel-body">
+            <form action="{{ delete }}" method="post" enctype="multipart/form-data" id="form-product">
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                  <thead>
+                    <tr>
+                      <td style="width: 1px;" class="text-center"><input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', this.checked);" /></td>
+                      <td class="text-center">{{ column_name }}</td>
+                      <td class="text-center">{{ column_total_product }}</td> 
+                      <td class="text-center">{{ column_status }}</td>
+                      <td class="text-right">{{ column_action }}</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  
+                  {% if store_categories %}
+                  {% for sc in store_categories %}
+                  <tr>
+                    <td class="text-center">{% if sc.store_category_id in selected %}
+                      <input type="checkbox" name="selected[]" value="{{ sc.store_category_id }}" checked="checked" />
+                      {% else %}
+                      <input type="checkbox" name="selected[]" value="{{ sc.store_category_id }}" />
+                      {% endif %}</td>
+                    <td class="text-left">{{ sc.category_name }}</td>
+                    <td class="text-left">{{ sc.total_product }}</td>
+                    <td class="text-right">{% if sc.status == 1 %} 
+                      {{ text_activate }}
+                      {% else %}
+                      {{ text_deactivate }}
+                      {% endif %}
+                    </td>
+                    <td class="text-right"><a href="{{ sc.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
+                  </tr>
+                  {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td class="text-center" colspan="8">{{ text_no_results }}</td>
+                  </tr>
+                  {% endif %}
+                    </tbody>
+                  
+                </table>
+              </div>
+            </form>
+            <div class="row">
+              <div class="col-sm-6 text-left">{{ pagination }}</div>
+              <div class="col-sm-6 text-right">{{ results }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }} 
+
+<div id="add_store_category_modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{{ text_add_category }}</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group row required">
+          <label class="col-sm-3 col-form-label" for="input-category-name">{{ entry_category_name }}</label>
+          <div class="col-sm-9">
+            <input type="text" name="category_name" value="" placeholder="{{ entry_category_name }}" id="input-category-name" class="form-control" />
+          </div>
+        </div>
+      </div>  
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default add-category">{{ text_confirm }}</button>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('.add-category').on('click', function() {
+     $.ajax({
+        url: 'index.php?route=catalog/store_category/add&user_token={{ user_token }}',
+        type: 'post',
+        data: {category_name: $('input[name="category_name"]').val()},
+        dataType: 'json',
+        beforeSend: function() {
+		    },
+        success: function(json) {
+          if (json.success) {
+            alert(json.success);
+          } else {
+            alert(json.error);
+          }
+		   },
+        error: function(xhr, ajaxOptions, thrownError) {
+            alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+      }); 
+  });
+});
+</script>

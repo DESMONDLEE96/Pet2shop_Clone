@@ -1,0 +1,167 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary fake-submit"><i class="fa fa-save"></i></button>
+        <button type="submit" form="form-country" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary" style="display:none"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_form }}</h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-country" class="form-horizontal">
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-location">{{ entry_location }}</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="location_name">
+                <option value="">- {{ entry_location }} -</option>
+                {% if country_lists %}
+                <optgroup label="Country">
+                  {% for c in country_lists %}
+                    {% if location_type == 'country' and location_id == c.country_id %}
+                    <option value="country-{{ c.country_id }}" selected> {{ c.name }}</option>
+                    {% else %}
+                    <option value="country-{{ c.country_id }}"> {{ c.name }}</option>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+                </optgroup>
+                {% if geo_zone_lists %}
+                <optgroup label="Geo Zone">
+                  {% for g in geo_zone_lists %}
+                    {% if location_type == 'geozone' and location_id == g.geo_zone_id %}
+                    <option value="geozone-{{ g.geo_zone_id }}" selected> {{ g.name }}</option>
+                    {% else %}
+                    <option value="geozone-{{ g.geo_zone_id }}"> {{ g.name }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </optgroup>
+                {% endif %}
+              </select>
+              {% if error_location_name %}
+              <div class="text-danger">{{ error_location_name }}</div>
+              {% endif %}
+              {% if error_repeated_location %}
+              <div class="text-danger">{{ error_repeated_location }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-courier">{{ entry_courier }}</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="shipping_courier_id">
+                {% if courier_lists %}
+                {% for c in courier_lists %}
+                  {% if shipping_courier_id == c.shipping_courier_id %}
+                  <option value={{ c.shipping_courier_id }} selected> {{ c.shipping_courier_name }} ({{ c.shipping_courier_code }}) </option>
+                  {% else %}
+                  <option value={{ c.shipping_courier_id }}> {{ c.shipping_courier_name }} ({{ c.shipping_courier_code }}) </option>
+                  {% endif %}
+                {% endfor %}
+                {% endif %}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-weight"><span data-toggle="tooltip" title="{{ help_weight }}">{{ entry_weight }}</span></label>
+            <div class="col-sm-10">
+                <table class="table table-bordered table-hover table-wp">
+                <thead>
+                  <tr><td>{{ text_weight }}</td><td>{{ text_price }}</td><td>{{ text_action }}</td></tr>
+                </thead> 
+                  {% if weight_setting %}
+                    {% for key,value in weight_setting %}
+                      <tr>
+                          <td><input type="number" value="{{ key }}" step="0.01" min="0" class="form-control weight"/></td>
+                          <td><input type="number" value="{{ value }}" step="0.01" min="0" class="form-control price"/></td>
+                          <td><a data-toggle="tooltip" title="" class="btn btn-danger delete-wp" data-original-title="Delete"><i class="fa fa-trash-o"></i></a></td>
+                      </tr>
+                    {% endfor %}
+                  {% endif %}
+                  <tr class="new-weight-price">
+                      <td></td><td></td><td><a data-toggle="tooltip" title="" class="btn btn-primary add-new-wp" data-original-title="Add New"><i class="fa fa-plus"></i></a></td>
+                    </tr> 
+                </table>
+                <input type="hidden" name="weight_setting" value="" />
+                {% if error_weight_setting %}
+                  <div class="text-danger">{{ error_weight_setting }}</div>
+                {% endif %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-entry">{{ column_status }}</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="status">
+                {% if status == 1 %}
+                <option value="0"> {{ text_disabled }}</option>
+                <option value="1" selected> {{ text_enabled }}</option>
+                {% else %}
+                <option value="0"> {{ text_disabled }}</option>
+                <option value="1"> {{ text_enabled }}</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}
+
+<script>
+$( document ).ready(function() {
+   $('.add-new-wp').on('click', function(e) {
+     $(this).closest('table').find('tr:last').before('<tr><td><input type="number" value="" step="0.01" min="0" class="form-control weight"/></td><td><input type="number" value="" step="0.01" min="0" class="form-control price"/></td><td></td></tr>');
+   });
+
+   $('.delete-wp').on('click', function(e) {
+     $(this).closest('tr').remove();
+   });
+
+  $('.fake-submit').on('click', function(e) {
+    var tmpArr = [];
+    $('table.table-wp > tbody > tr').each(function(index, tr) {
+        var weight = $(tr).find('input.weight').val();
+        var price = $(tr).find('input.price').val();
+
+        if (weight && price) {
+          var repeatedIndex = tmpArr.findIndex((x => x.weight == weight));
+          if (repeatedIndex != -1) {
+            tmpArr[repeatedIndex].price = price;
+          } else {
+            tmpArr.push({"weight":weight, "price":price});
+          }
+          //tmpArr[weight] = price;
+        }
+    });
+
+    var tmpObj = {};
+    $.each(tmpArr, function( i, v ) {
+      tmpObj[v.weight] = v.price;
+    });
+
+    $('input[name="weight_setting"]').val(JSON.stringify(tmpObj));
+    $('button[type="submit"]').trigger('click');
+  });
+});
+</script>

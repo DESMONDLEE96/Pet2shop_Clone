@@ -1,0 +1,387 @@
+{{ header }}
+<div id="checkout-checkout" class="container">
+  <ul class="breadcrumb">
+    {% for breadcrumb in breadcrumbs %}
+    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+    {% endfor %}
+  </ul>
+  {% if error_warning %}
+  <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+  </div>
+  {% endif %}
+  <div class="row">{{ column_left }}
+    {% if column_left and column_right %}
+    {% set class = 'col-sm-6' %}
+    {% elseif column_left or column_right %}
+    {% set class = 'col-sm-9' %}
+    {% else %}
+    {% set class = 'col-sm-12' %}
+    {% endif %}
+    <div id="content" class="{{ class }}">{{ content_top }}
+      <h1>{{ heading_title }}</h1>
+      <div class="panel-group" id="accordion">
+        
+        <div class="card card-default">
+          <div class="card-header">
+            <h4 class="card-title">{{ text_delivery_address }} <button type="button" class="btn btn-info btn-lg btn-add-address" style="float:right" data-toggle="modal" data-target="#add_address">+ {{ text_address_new }}</button></h4>
+          </div>
+          <div class="card-body bg_white">
+            {% if addresses %}
+                {% for sa in addresses %}
+                  {% if default_address_id == sa.address_id %}
+                    <div class="address" style="display:block">
+                      <input type="radio" name="shipping_address" id="shipping_id_{{ sa.address_id }}" value="{{ sa.address_id }}" checked> &nbsp;
+                      <label for="shipping_id_{{ sa.address_id }}">
+                      {{ sa.firstname }} {{ sa.lastname }} -&nbsp;{{ sa.address_1 }}&nbsp;{{ sa.address_2 }}&nbsp;{{ sa.postcode }}&nbsp;{{ sa.city }}&nbsp; {{ sa.zone }}
+                      </label>
+                      {% if addresses|length > 1 %}
+                      <span class="change-address" style="cursor:pointer; margin-left: 20px; text-decoration:underline; color: #ff5808; text-transform: uppercase;">{{ text_change }}</span>
+                      {% endif %}
+                      <br/>
+                    </div>
+                  {% else %}
+                    <div class="address hidden-address" style="display:none">
+                      <input type="radio" name="shipping_address" id="shipping_id_{{ sa.address_id }}" value="{{ sa.address_id }}" style="display:hidden;"> &nbsp;
+                      <label for="shipping_id_{{ sa.address_id }}">
+                        {{ sa.firstname }} {{ sa.lastname }} -&nbsp;{{ sa.address_1 }}&nbsp;{{ sa.address_2 }}&nbsp;{{ sa.postcode }}&nbsp;{{ sa.city }}&nbsp; {{ sa.zone }}
+                        </label><br/>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            {% if has_shipping_address == 0 %}
+            <p style="color:red">{{ text_at_least_shipping }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="check-shipping-address">
+        <div class="card card-default product-info">
+          {% for store in stores %}
+          <table class="table special_table checkout_table" data-store-id="{{ store.store_id }}">
+            <thead>
+              <tr class="store-name"><td colspan=7> {{ store.name }} </td></tr>
+              <tr>
+                <td class="text-left">{{ column_image }}</td>
+                <td class="text-left">{{ column_name }}</td>
+                <td class="text-left">{{ column_model }}</td>
+                <td class="text-left">{{ column_quantity }}</td>
+                <td class="text-right">{{ column_price }}</td>
+                <td class="text-right total-item-price" data-total-item-price="{{ store.total_item_price }}">{{ column_total }}</td>
+              </tr>
+            </thead>
+            <tbody>
+            {% for product in products %}
+              {% if product.store_id == store.store_id %}
+                <tr>
+                  <td class="text-left" data-label="{{ column_image }}">{% if product.thumb %} <a href="{{ product.href }}"><img src="{{ product.thumb }}" alt="{{ product.name }}" title="{{ product.name }}" class="img-thumbnail" /></a> {% endif %}</td>
+                  <td class="text-left" data-label="{{ column_name }}"><a href="{{ product.href }}">{{ product.name }}</a> {% if not product.stock %} <span class="text-danger">***</span> {% endif %}
+                    {% if product.variation %}
+                        {% for k,v in product.variation %} <br />
+                        <small>{{ k }}: {{ v }}</small> 
+                        {% endfor %}
+                    {% endif %}
+                    {% if product.reward %} <br />
+                    <small>{{ product.reward }}</small> 
+                    {% endif %}
+                  </td>
+                  <td class="text-left" data-label="{{ column_model }}"><span>{{ product.model }}</span></td>
+                  <td class="text-center" data-label="{{ column_quantity }}">
+                      <div>{{ product.quantity }}</div>
+                  </td>
+                  <td class="text-right" data-label="{{ column_price }}"><span>{{ product.price }}</span></td>
+                  <td class="text-right" data-label="{{ column_total }}"><span>{{ product.total }}</span></td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+            <tr>
+              <td colspan=3 class="text-left">
+                {{ text_message }}:
+                <textarea name="comment" rows="4" class="form-control">{{ comment }}</textarea>
+              </td>
+              <td colspan=2 class="text-left">
+                <p class="mb-0">{{ text_shipping_option }}: </p>
+                {% if store.default_shipping %}
+                  <p class="selected-shipping-name" data-shipping-id="{{ store.default_shipping.shipping_courier_id }}">
+                    {{ store.default_shipping.title }}({{ store.default_shipping.code }})
+                  </p>
+                {% endif %}
+                {# <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#shipping_modal">{{ text_change }}</button> #}
+                <button type="button" class="btn btn-info btn-lg shipping-modal" data-toggle="modal">{{ text_change }}</button>
+              </td>
+              <td class="text-right">
+                {% if store.default_shipping %}
+                  <p class="selected-shipping-cost" data-shipping-cost="{{ store.default_shipping.cost }}">{{ store.default_shipping.text }}</p>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td colspan=5 style="border:none" class="text-right">{{ column_total }}</td>
+              <td class="text-right"><b><span class="total-price">{{ store.total_price_with_currency }}</span></b></td>
+            </tr>
+            </tbody>
+          </table>
+          {% endfor %}
+          
+          
+        </div>
+          </div>
+
+        <div class="card card-default">
+          <div class="card-header">
+            
+          </div>
+          <div class="card-body bg_white">
+             Use Coupon: &nbsp; <input type="text" name="coupon" placeholder="Enter Coupon">
+             <button type="button" class="btn btn-primary confirm-coupon">Confirm</button>
+          </div>
+        </div>
+          <table style="float:right">
+            <tr>
+              <td class="coupon-name"></td>
+              <td class="coupon-amount"></td>
+            </tr>
+            <tr>
+              <td>Grand Total:</td>
+              <td><b><span class="grand-total" data-grand-total="{{ grand_total_price }}"> {{ grand_total_price_with_currency }}</span></b></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="card card-default choose-payment">
+          <div class="card-header">
+            <h4 class="card-title">{{ text_payment_method }}</h4>
+          </div>
+          <div class="card-body bg_white">
+            {% if payment_methods %}
+                {% for pm in payment_methods %}
+                    <input type="radio" name="payment_method" id="payment_code_{{ pm.code }}" value="{{ pm.code }}"> &nbsp;
+                    <label for="payment_code_{{ pm.code }}" class="mb-0">{{ pm.title }}</label><br/>
+                {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+        <button class="btn btn-lg place-order">{{ text_place_order }}</button>
+      </div>
+
+
+      </div>
+      {{ content_bottom }}</div>
+    {{ column_right }}</div>
+</div>
+
+{% if new_shipping_address_modal %}
+  {{ new_shipping_address_modal }}
+{% endif %}
+
+<!-- Choose Shipping Modal -->
+<div id="shipping_modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{{ text_shipping_method }}</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+      </div>  
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default choose-shipping-method">{{ text_confirm }}</button>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+
+
+<script type="text/javascript">
+//shipping methods for reach store
+var shipping_methods = {{ shipping_methods|json_encode(constant('JSON_PRETTY_PRINT')) }} ;
+$('.shipping-modal').on('click', function(e) {
+  var store_id = $(this).closest('.checkout_table').data('store-id');
+  var sm = shipping_methods[store_id];
+  console.log(sm);
+
+  var html = '<div class="store-shipping-options" data-store-id='+ store_id +'>';
+  if (Object.keys(sm).length > 0) {
+    $.each(sm, function(i,v) {
+        html+= '<div class="form-check">';
+        html+= '<input class="form-check-input" id="shipping-courier-id-'+v['shipping_courier_id']+'"  type="radio" name="shipping_method" value="'+v['shipping_courier_id']+'">';
+        html+= ' <label for="shipping-courier-id-'+ v['shipping_courier_id'] +'" class="form-check-label">'+v["title"]+' - '+ v["text"] +' </label>';
+        html+= '</div>';
+    });
+  }
+  html+= '</div>';
+  $('#shipping_modal .modal-body').html(html);
+  $('#shipping_modal').modal();
+});
+
+//confirm shipping method for the store
+$('.choose-shipping-method').on('click', function(e) {
+  var chosen = $(this).closest('#shipping_modal').find('input[name="shipping_method"]:checked').val();
+  var store_id = $(this).closest('#shipping_modal').find('.store-shipping-options').data('store-id');
+  var store_total_item_price =  $('.checkout_table[data-store-id="'+store_id+'"]').find('.total-item-price').data('total-item-price');
+  var sm = $.map(shipping_methods[store_id], function(v,i){
+    if (v.shipping_courier_id == chosen) { return v;}
+  });
+  if (chosen) {
+    var total_price = parseFloat(store_total_item_price) + parseFloat(sm[0].cost);
+    $('.checkout_table[data-store-id="'+store_id+'"]').find('.selected-shipping-name').text(sm[0].title).attr('data-shipping-id', sm[0].shipping_courier_id);
+    $('.checkout_table[data-store-id="'+store_id+'"]').find('.selected-shipping-cost').text(sm[0].text).attr('data-shipping-cost', sm[0].cost);
+    $('.checkout_table[data-store-id="'+store_id+'"]').find('.total-price').text('{{ currency_symbol_left }}' + total_price.toLocaleString("en",{ minimumFractionDigits: 2 }));
+
+    var grand_total = 0;
+    $.each($('.total-item-price'), function() {
+      grand_total+= parseFloat($(this).attr('data-total-item-price'));
+    });
+    $.each($('.selected-shipping-cost'), function() {
+      grand_total+= parseFloat($(this).attr('data-shipping-cost'));
+    });
+    $('.grand-total').data('grand-total', grand_total).attr('data-grand-total', grand_total); //data and attribute are different
+    $('.grand-total').text('{{ currency_symbol_left }}' + grand_total.toLocaleString("en",{ minimumFractionDigits: 2 }));
+
+  } 
+  $('#shipping_modal').modal('hide');
+});
+
+//use coupon
+var coupon = null;
+$('button.confirm-coupon').on('click', function(e) {
+  if (!$('input[name="coupon"]').val()) {
+      alert("Please Key in your coupon's code");
+    } else {
+      $.ajax({
+        url: 'index.php?route=checkout/checkout/coupon',
+        type: 'post',
+        data: { 
+          coupon: $('input[name="coupon"]').val(),
+        },
+        dataType: 'json',
+        beforeSend: function() {
+          $('.confirm-coupon').prop('disabled', true);
+        },
+        complete: function() {
+          $('.confirm-coupon').prop('disabled', false);
+        },
+        success: function(json) {
+          if (json.error) {
+            alert(json.error);
+          } else {
+            if (json.coupon) {
+              console.log(json.coupon);
+              coupon = json.coupon;
+              calculateGrandTotal();
+            }
+          }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+          alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+      });
+    }
+});
+
+function calculateGrandTotal() {
+  var itemTotal = 0;
+  var shippingTotal = 0;
+  var grandTotal = 0;
+  $.each($('.total-item-price'), function() {
+    itemTotal+= parseFloat($(this).data('total-item-price'));
+  });
+  $.each($('.selected-shipping-cost'), function() {
+    shippingTotal+= parseFloat($(this).data('shipping-cost'));
+  });
+
+  grandTotal = itemTotal + shippingTotal;
+  //if coupon is used, validate
+  if (coupon && grandTotal >= parseFloat(coupon.total)) {
+    var amount = 0;
+    if (coupon.type == 'F')  {//fixed 
+      amount = parseFloat(coupon.discount);
+    } else if (coupon.type == 'P') {
+      amount = grandTotal * (parseFloat(coupon.discount) / 100);
+    }
+
+    //if amount > max discount, use max discount
+    amount = amount > parseFloat(coupon.max_discount) ? coupon.max_discount : amount;
+    grandTotal-= amount;
+
+    $('.coupon-name').html(coupon.name);
+    $('.coupon-amount').html('-{{ currency_symbol_left }}' + amount.toLocaleString("en",{ minimumFractionDigits: 2 }));
+  }
+
+  $('.grand-total').text('{{ currency_symbol_left }}' + grandTotal.toLocaleString("en",{ minimumFractionDigits: 2 }));
+  //console.log(itemTotal + shippingTotal);
+}
+
+$('button.place-order').on('click', function(e) {
+    if (!$('input[name="shipping_address"]:checked').val()) {
+      alert('You have no shipping address. Please add at least one to proceed.');
+    } else {
+      var store = {};
+      $.each($('.checkout_table'), function() {
+        store[$(this).data('store-id')] = {
+          'store_id' : $(this).data('store-id'),
+          'shipping_comment' : $(this).find('textarea[name="comment"]').val(),
+          'shipping_courier_id' : $(this).find('.selected-shipping-name').data('shipping-id'),
+        };
+      });
+      
+      $.ajax({
+        url: 'index.php?route=checkout/checkout/placeOrder',
+        type: 'post',
+        data: { 
+          shippingAddressId: $('input[name="shipping_address"]:checked').val(),
+          paymentMethod: $('input[name="payment_method"]:checked').val(),
+          coupon: coupon,
+          store: JSON.stringify(store)
+        },
+        dataType: 'json',
+        beforeSend: function() {
+          $('.place-order').prop('disabled', true);
+        },
+        complete: function() {
+          $('.place-order').prop('disabled', false);
+        },
+        success: function(json) {
+          if (json.redirect) {
+            window.location.href = json.redirect;
+          }
+          
+          if (Object.keys(json.error).length > 0) {
+            var msg = '';
+            $.each(json.error, function( i, v ) {
+              msg+= v;
+            });
+            alertify.alert("Warning", msg);
+          }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+          alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+      });
+    }
+  });
+
+</script>
+{{ footer }}
+
+<style>
+tr.store-name {
+    border: 1px solid #e9e9e9;
+    background-color: #df603f;
+    color: white;
+}
+
+.checkout_table {
+  margin: 30px 0;
+  border: 1px solid #df603f;
+  border-collapse: unset;
+}
+</style>

@@ -1,0 +1,205 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button data-toggle="tooltip" title="{{ button_save }}" class="btn save-store btn-primary"><i class="fa fa-save"></i></button>
+      
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="container-fluid"> {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_store }}</h3>
+      </div>
+      <div class="panel-body form-horizontal">
+
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-name">{{ entry_store_name }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="name" value="{{ name }}" placeholder="{{ entry_store_name }}" id="input-name" class="form-control" />
+           </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-sm-2 control-label"><span data-toggle="tooltip" title="{{ help_minimum }}">Store Image</span></label>
+            <div class="col-sm-10 image-input">
+                <div class="img-box"></div> <input type="file" name="store-img" accept="image/*">
+            </div>
+          </div>
+
+
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-text">{{ entry_description }}</label>
+            <div class="col-sm-10">
+              <textarea name="description" cols="60" rows="8" placeholder="{{ entry_description }}" id="input-text" class="form-control">{{ description }}</textarea>
+            </div>
+          </div>
+
+          {# <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-rating">{{ entry_rating }}</label>
+            <div class="col-sm-10">
+            </div>
+          </div> #}
+
+          <div class="form-group required">
+            <label class="col-sm-2 control-label" for="input-text">{{ entry_store_address }}</label>
+            <div class="col-sm-10">
+              <textarea name="address" cols="60" rows="8" placeholder="{{ entry_store_address }}" id="input-text" class="form-control">{{ address }}</textarea>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-date-added">{{ text_date_added }}</label>
+            <div class="col-sm-3">
+              {{ date_joined }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+            <div class="col-sm-10">
+              <select name="status" id="input-status" class="form-control">
+                
+                {% if status == 1 %}
+                
+                <option value="1" selected="selected">{{ text_enabled }}</option>
+                <option value="0">{{ text_disabled }}</option>
+                
+                {% else %}
+                
+                <option value="1">{{ text_enabled }}</option>
+                <option value="0" selected="selected">{{ text_disabled }}</option>
+                
+                {% endif %}
+              
+              </select>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  
+</div>
+  
+{{ footer }}
+
+<script>
+  var savedImg = '{{ image }}';
+  if (savedImg) {
+    $(document).ready(function(){
+      $('.img-box').addClass('inserted').css("background-image", 'url('+ savedImg +')');
+    });
+  }
+
+  var storeImg = '';
+
+  $('.save-store').on('click', function() {
+    
+    var formData = new FormData();
+    if (storeImg) {
+      formData.append('image', storeImg, storeImg.Name);
+    }
+    formData.append('name', $('input[name="name"]').val());
+    formData.append('description', $('textarea[name="description"]').val());
+    formData.append('address', $('textarea[name="address"]').val());
+    formData.append('status', $('select[name="status"]').val());
+
+     $.ajax({
+        url: 'index.php?route=store/store/save&user_token={{ user_token }}',
+        type: 'post',
+        data: formData,
+        dataType: 'json',
+        processData: false,
+        contentType: false,
+        beforeSend: function() {
+          $('.save-store').prop('disabled', true);
+        },
+        complete: function() {
+          $('.save-store').prop('disabled', false);
+        },
+        success: function(json) {
+          console.log(json.error);
+          if (Object.keys(json.error).length > 0) {
+            console.log(json.error.length);
+            var msg = '';
+            $.each(json.error, function( i, v ) {
+              msg+= v + "<br/>";
+            });
+            alertify.alert("Warning", msg);
+          } else {
+            alertify.alert("Successful Update", json['success'], function() {window.location.reload();});
+          }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+          alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+      });
+  });
+
+  $("input[name='store-img']").on('change', function(e) {
+    var tmppath = URL.createObjectURL(e.target.files[0]);
+    $('.img-box').addClass('inserted').css("background-image", 'url('+ tmppath +')');
+
+    storeImg = e.target.files[0];
+  });
+
+  $(".img-box").on('click', function(e) {
+    $('.image-input').find('input[type="file"]').trigger('click');
+  });
+</script>
+
+<style>
+.img-box-container {
+    display: inline-block;
+    position: relative;
+}
+
+.img-box {
+  width: 100px;
+  height: 100px;
+  margin: 5px;
+  border: 2px dashed #07c6f1;
+  display: inline-block;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.img-box.inserted:hover {
+  
+}
+
+.img-box.inserted:before {
+  opacity: 0;
+}
+
+.img-box:before {
+    content: '+';
+    color: #07c6f1;
+    font-size: 50px;
+    display: flex;
+    font-family: none;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.image-input input[type=file] {
+  display: none;
+}
+</style>

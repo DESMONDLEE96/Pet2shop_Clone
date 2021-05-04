@@ -1,0 +1,192 @@
+{##
+/**
+ * @category   MonolithForge/OpenCart/Bootstrap4ThemeBasic
+ * @package    opencart-bootstrap4-theme-basic
+ * @author     dev@monolithforge.com
+ * @copyright  2018 Monolith Forge, LLC
+ * @license    https://www.monolithforge.com/license/opencart-bootstrap4-theme-basic.txt
+ * @version    3.0.2.0-bootstrap4-theme-basic-a6
+ */
+#}
+
+<!-- New Address Modal -->
+<div id="add_address" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content" style="max-width: 800px;margin: 0 auto;">
+      <div class="modal-header">
+        <button type="button" style="font-size: 25px;" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">{{ text_add_new_ship_address }}</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group row required">
+          <label class="col-sm-3 col-form-label" for="input-shipping-firstname">{{ entry_firstname }}</label>
+          <div class="col-sm-9">
+            <input type="text" name="firstname" value="" placeholder="{{ entry_firstname }}" id="input-shipping-firstname" class="form-control" />
+          </div>
+        </div>
+        <div class="form-group row required">
+          <label class="col-sm-3 col-form-label" for="input-shipping-lastname">{{ entry_lastname }}</label>
+          <div class="col-sm-9">
+            <input type="text" name="lastname" value="" placeholder="{{ entry_lastname }}" id="input-shipping-lastname" class="form-control" />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label" for="input-shipping-company">{{ entry_company }}</label>
+          <div class="col-sm-9">
+            <input type="text" name="company" value="" placeholder="{{ entry_company }}" id="input-shipping-company" class="form-control" />
+          </div>
+        </div>
+        <div class="form-group row required">
+          <label class="col-sm-3 col-form-label" for="input-shipping-address-1">{{ entry_address_1 }}</label>
+          <div class="col-sm-9">
+            <input type="text" name="address_1" value="" placeholder="{{ entry_address_1 }}" id="input-shipping-address-1" class="form-control" />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label" for="input-shipping-address-2">{{ entry_address_2 }}</label>
+          <div class="col-sm-9">
+            <input type="text" name="address_2" value="" placeholder="{{ entry_address_2 }}" id="input-shipping-address-2" class="form-control" />
+          </div>
+        </div>
+        <div class="form-group row required">
+          <label class="col-sm-3 col-form-label" for="input-shipping-city">{{ entry_city }}</label>
+          <div class="col-sm-9">
+            <input type="text" name="city" value="" placeholder="{{ entry_city }}" id="input-shipping-city" class="form-control" />
+          </div>
+        </div>
+        <div class="form-group row required">
+          <label class="col-sm-3 col-form-label" for="input-shipping-postcode">{{ entry_postcode }}</label>
+          <div class="col-sm-9">
+            <input type="text" name="postcode" value="" placeholder="{{ entry_postcode }}" id="input-shipping-postcode" class="form-control" />
+          </div>
+        </div>
+        <div class="form-group row required">
+          <label class="col-sm-3 col-form-label" for="input-shipping-country">{{ entry_country }}</label>
+          <div class="col-sm-9">
+            <select name="country_id" id="input-shipping-country" class="form-control">
+              <option value="">{{ text_select }}</option>
+              {% for country in countries %}
+              <option value="">aaaa</option>
+              {% if country.country_id == country_id %}
+              <option value="{{ country.country_id }}" selected="selected">{{ country.name }}</option>
+              {% else %}
+              <option value="{{ country.country_id }}">{{ country.name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group row required">
+          <label class="col-sm-3 col-form-label" for="input-shipping-zone">{{ entry_zone }}</label>
+          <div class="col-sm-9">
+            <select name="zone_id" id="input-shipping-zone" class="form-control">
+            </select>
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-sm-2"></div>
+          <div class="col-sm-9">
+            <input type="checkbox" name="default" id="input-default-address" class="form-control" style="width: 20px; display: inline-block;" value="1">
+            <label for="input-default-address">{{ text_address_default }}</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default save-new-address">{{ text_add }}</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{ text_cancel }}</button>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<script>
+  $(document).on('click', '.save-new-address' , function() {
+    $.ajax({
+        url: 'index.php?route=checkout/shipping_address/addNewAddress',
+        type: 'post',
+        data: $('#add_address input[type=\'text\'], #add_address textarea, #add_address select, #add_address input[type=\'checkbox\']'),
+        dataType: 'json',
+        beforeSend: function() {
+          $('.btn-add-address').prop('disabled', true);
+          $('#add_address').find('.text-danger').remove();
+        },
+        complete: function() {
+          $('.btn-add-address').prop('disabled', false);
+        },
+        success: function(json) {
+          if (json.error && Object.keys(json.error).length > 0) {
+            $.each(json.error, function(i,v) {
+              $('#add_address input[name="' + i + '"]').after('<div class="text-danger">' + v + '</div>');
+              $('#add_address select[name="' + i + '"]').after('<div class="text-danger">' + v + '</div>');
+            });
+
+					} else {
+              alert('Address Successfully added');
+              location.reload();
+              $('#add_address').modal('hide');
+          }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+          alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+     });
+});
+</script>
+
+<script type="text/javascript"><!--
+$('#add_address select[name=\'country_id\']').on('change', function() {
+	$.ajax({
+		url: 'index.php?route=checkout/checkout/country&country_id=' + this.value,
+		dataType: 'json',
+		beforeSend: function() {
+			$('#add_address select[name=\'country_id\']').prop('disabled', true);
+		},
+		complete: function() {
+			$('#add_address select[name=\'country_id\']').prop('disabled', false);
+		},
+		success: function(json) {
+			if (json['postcode_required'] == '1') {
+				$('#add_address input[name=\'postcode\']').parent().parent().addClass('required');
+			} else {
+				$('#add_address input[name=\'postcode\']').parent().parent().removeClass('required');
+			}
+
+			html = '<option value="">{{ text_select }}</option>';
+
+			if (json['zone'] && json['zone'] != '') {
+				for (i = 0; i < json['zone'].length; i++) {
+					html += '<option value="' + json['zone'][i]['zone_id'] + '"';
+
+					if (json['zone'][i]['zone_id'] == '{{ zone_id }}') {
+						html += ' selected="selected"';
+					}
+
+					html += '>' + json['zone'][i]['name'] + '</option>';
+				}
+			} else {
+				html += '<option value="0" selected="selected">{{ text_none }}</option>';
+			}
+
+			$('#add_address select[name=\'zone_id\']').html(html);
+		},
+		error: function(xhr, ajaxOptions, thrownError) {
+			alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+		}
+	});
+});
+
+$('#add_address select[name=\'country_id\']').trigger('change');
+//--></script>
+
+<style>
+.close {
+  display: block;
+  position: absolute;
+  right: 20px;
+  top: 10px;
+}
+</style>
